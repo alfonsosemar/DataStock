@@ -1,19 +1,20 @@
+package es.iesisidra.datastock.complementarias;
 
-import es.iesisidra.datastock.ficheros.ImportadorJson;
-import es.iesisidra.datastock.ficheros.ImportadorXml;
-import es.iesisidra.datastock.ficheros.OperacionFicheroException;
-import es.iesisidra.datastock.ficheros.PersistenciaInventario;
-import es.iesisidra.datastock.ficheros.RegistroStock;
-import es.iesisidra.datastock.ficheros.Rutas;
-import es.iesisidra.datastock.ficheros.StockBinario;
-import es.iesisidra.datastock.servicio.Inventario;
-import es.iesisidra.datastock.util.ColoresConsola;
-import es.iesisidra.datastock.util.LectorConsola;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import es.iesisidra.datastock.ficheros.ImportadorJson;
+import es.iesisidra.datastock.ficheros.ImportadorXml;
+import es.iesisidra.datastock.ficheros.OperacionFicheroException;
+import es.iesisidra.datastock.ficheros.PersistenciaInventario;
+import es.iesisidra.datastock.ficheros.Rutas;
+import es.iesisidra.datastock.ficheros.StockBinario;
+import es.iesisidra.datastock.servicio.Inventario;
+import es.iesisidra.datastock.util.ColoresConsola;
+import es.iesisidra.datastock.util.LectorConsola;
 
 /**
  * RF-FIC-08: acceso aleatorio con RandomAccessFile sobre stock.bin (36 bytes
@@ -83,7 +84,7 @@ public final class AccesoAleatorioActividad {
     private static void consultar() throws OperacionFicheroException {
         long total = StockBinario.contarRegistros(exigirFichero());
         long posicion = pedirPosicion(total);
-        RegistroStock registro = StockBinario.leerRegistro(FICHERO, posicion);
+        StockBinario.RegistroStock registro = StockBinario.leerRegistro(FICHERO, posicion);
         System.out.println(registro);
     }
 
@@ -97,7 +98,7 @@ public final class AccesoAleatorioActividad {
 
     private static void mostrarTodos() throws OperacionFicheroException {
         exigirFichero();
-        List<RegistroStock> registros = StockBinario.leerTodos(FICHERO);
+        List<StockBinario.RegistroStock> registros = StockBinario.leerTodos(FICHERO);
         for (int i = 0; i < registros.size(); i++) {
             System.out.println("[" + i + "] " + registros.get(i));
         }
