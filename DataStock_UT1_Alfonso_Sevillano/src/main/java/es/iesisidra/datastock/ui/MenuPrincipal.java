@@ -1,5 +1,9 @@
 package es.iesisidra.datastock.ui;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
 import es.iesisidra.datastock.ficheros.ExploradorRutas;
 import es.iesisidra.datastock.ficheros.ExportadorJson;
 import es.iesisidra.datastock.ficheros.ExportadorXml;
@@ -13,140 +17,105 @@ import es.iesisidra.datastock.servicio.Inventario;
 import es.iesisidra.datastock.servicio.ResultadoImportacion;
 import es.iesisidra.datastock.util.ColoresConsola;
 import es.iesisidra.datastock.util.LectorConsola;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 
 /**
- * Presentación de menús y navegación de la primera fase de DataStock.
- * <p>
- * Los métodos marcados TODO son puntos de partida, NO soluciones de los
- * requisitos. El alumnado deberá delegar el acceso a ficheros, la validación y
- * el procesamiento en métodos o clases independientes.</p>
+ * Menús de DataStock. Solo pide datos y llama a otras clases:
+ * la lógica de ficheros está en el paquete "ficheros" y las reglas en "servicio".
  */
+public class MenuPrincipal {
+    private final Inventario inventario;
 
+    /** @param inventario colección común de productos de esta ejecución. */
+    public MenuPrincipal(Inventario inventario) { this.inventario = inventario; }
 
-      public class MenuPrincipal {
+    /** Ejecuta el menú principal hasta que el usuario selecciona salir. */
+    public void iniciar() {
+        int opcion;
+        do {
+            mostrarCabecera();
+            System.out.println("1. Explorar ficheros y directorios");
+            System.out.println("2. Importar productos desde JSON");
+            System.out.println("3. Importar productos desde XML");
+            System.out.println("4. Consultar productos");
+            System.out.println("5. Exportar productos");
+            System.out.println("6. Guardar y recuperar inventario");
+            System.out.println("0. Salir");
+            opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 6);
+            switch (opcion) {
+                case 1 : explorarRuta();
+                case 2 : importarJson();
+                case 3 : importarXml();
+                case 4 : menuConsultas();
+                case 5 : menuExportaciones();
+                case 6 : menuSerializacion();
+                case 0 : System.out.println(ColoresConsola.pintar("Hasta pronto.", ColoresConsola.VERDE));
+                default : throw new IllegalStateException("Opción inesperada");
+            }
+        } while (opcion != 0);
+    }
 
-        private final Inventario inventario;
+    private void mostrarCabecera() {
+        System.out.println(ColoresConsola.pintar("\n================================================", ColoresConsola.CIAN));
+        System.out.println(ColoresConsola.pintar("         DATASTOCK - GESTIÓN DE INVENTARIO", ColoresConsola.NEGRITA));
+        System.out.println(ColoresConsola.pintar("                 FASE 1 - UT1", ColoresConsola.CIAN));
+        System.out.println(ColoresConsola.pintar("================================================", ColoresConsola.CIAN));
+        System.out.println(ColoresConsola.pintar("Productos en memoria: " + inventario.cantidad(), ColoresConsola.GRIS));
+    }
 
-        /**
-         * @param inventario colección común de productos de esta ejecución.
-         */
-        public MenuPrincipal(Inventario inventario) {
-            this.inventario = inventario;
-        }
+    private void menuConsultas() {
+        int opcion;
+        do {
+            System.out.println("\n---------- CONSULTA DE PRODUCTOS ----------");
+            System.out.println("1. Listar todos los productos");
+            System.out.println("2. Buscar producto por código");
+            System.out.println("3. Buscar productos por nombre");
+            System.out.println("0. Volver al menú principal");
+            opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 3);
+            switch (opcion) {
+                case 1 : listarProductos();
+                case 2 : buscarPorCodigo();
+                case 3 : buscarPorNombre();
+                case 0 : { }
+                default : throw new IllegalStateException("Opción inesperada");
+            }
+        } while (opcion != 0);
+    }
 
-        /**
-         * Ejecuta el menú principal hasta que el usuario selecciona salir.
-         */
-        public void iniciar() {
-            int opcion;
-            do {
-                mostrarCabecera();
-                System.out.println("1. Explorar ficheros y directorios");
-                System.out.println("2. Importar productos desde JSON");
-                System.out.println("3. Importar productos desde XML");
-                System.out.println("4. Consultar productos");
-                System.out.println("5. Exportar productos");
-                System.out.println("6. Guardar y recuperar inventario");
-                System.out.println("0. Salir");
-                opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 6);
-                switch (opcion) {
-                    case 1 ->
-                        explorarRuta();
-                    case 2 ->
-                        importarJson();
-                    case 3 ->
-                        importarXml();
-                    case 4 ->
-                        menuConsultas();
-                    case 5 ->
-                        menuExportaciones();
-                    case 6 ->
-                        menuSerializacion();
-                    case 0 ->
-                        System.out.println(ColoresConsola.pintar("Hasta pronto.", ColoresConsola.VERDE));
-                    default ->
-                        throw new IllegalStateException("Opción inesperada");
-                }
-            } while (opcion != 0);
-        }
+    private void menuExportaciones() {
+        int opcion;
+        do {
+            System.out.println("\n---------- EXPORTAR PRODUCTOS ----------");
+            System.out.println("1. Exportar productos a JSON");
+            System.out.println("2. Exportar productos a XML");
+            System.out.println("0. Volver al menú principal");
+            opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 2);
+            switch (opcion) {
+                case 1 : exportar(true);
+                case 2 : exportar(false);
+                case 0 : { }
+                default : throw new IllegalStateException("Opción inesperada");
+            }
+        } while (opcion != 0);
+    }
 
-        private void mostrarCabecera() {
-            System.out.println(ColoresConsola.pintar("\n================================================", ColoresConsola.CIAN));
-            System.out.println(ColoresConsola.pintar("         DATASTOCK - GESTIÓN DE INVENTARIO", ColoresConsola.NEGRITA));
-            System.out.println(ColoresConsola.pintar("                 FASE 1 - UT1", ColoresConsola.CIAN));
-            System.out.println(ColoresConsola.pintar("================================================", ColoresConsola.CIAN));
-            System.out.println(ColoresConsola.pintar("Productos en memoria: " + inventario.getProductos().size(), ColoresConsola.GRIS));
-        }
+    private void menuSerializacion() {
+        int opcion;
+        do {
+            System.out.println("\n---------- GUARDAR Y RECUPERAR INVENTARIO ----------");
+            System.out.println("1. Guardar inventario en fichero .dat");
+            System.out.println("2. Recuperar inventario desde fichero .dat");
+            System.out.println("0. Volver al menú principal");
+            opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 2);
+            switch (opcion) {
+                case 1 : guardarInventario();
+                case 2 :recuperarInventario();
+                case 0 : { }
+                default : throw new IllegalStateException("Opción inesperada");
+            }
+        } while (opcion != 0);
+    }
 
-        private void menuConsultas() {
-            int opcion;
-            do {
-                System.out.println("\n---------- CONSULTA DE PRODUCTOS ----------");
-                System.out.println("1. Listar todos los productos");
-                System.out.println("2. Buscar producto por código");
-                System.out.println("3. Buscar productos por nombre");
-                System.out.println("0. Volver al menú principal");
-                opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 3);
-                switch (opcion) {
-                    case 1 ->
-                        listarProductos();
-                    case 2 ->
-                        buscarPorCodigo();
-                    case 3 ->
-                        buscarPorNombre();
-                    case 0 -> {
-                    }
-                    default ->
-                        throw new IllegalStateException("Opción inesperada");
-                }
-            } while (opcion != 0);
-        }
-
-        private void menuExportaciones() {
-            int opcion;
-            do {
-                System.out.println("\n---------- EXPORTAR PRODUCTOS ----------");
-                System.out.println("1. Exportar productos a JSON");
-                System.out.println("2. Exportar productos a XML");
-                System.out.println("0. Volver al menú principal");
-                opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 2);
-                switch (opcion) {
-                    case 1 ->
-                        exportar(true);
-                    case 2 ->
-                        exportar(false);
-                    case 0 -> 
-                    default ->
-                        throw new IllegalStateException("Opción inesperada");
-                }
-            } while (opcion != 0);
-        }
-
-        private void menuSerializacion() {
-            int opcion;
-            do {
-                System.out.println("\n---------- GUARDAR Y RECUPERAR INVENTARIO ----------");
-                System.out.println("1. Guardar inventario en fichero .dat");
-                System.out.println("2. Recuperar inventario desde fichero .dat");
-                System.out.println("0. Volver al menú principal");
-                opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 2);
-                switch (opcion) {
-                    case 1 ->
-                        guardarInventario();
-                    case 2 ->
-                        recuperarInventario();
-                    case 0 -> {
-                    }
-                    default ->
-                        throw new IllegalStateException("Opción inesperada");
-                }
-            } while (opcion != 0);
-        }
-
-    }// ---------- RF-FIC-01 ----------
+    // ---------- RF-FIC-01 ----------
 
     private void explorarRuta() {
         String ruta = LectorConsola.leerTexto("Ruta: ");
@@ -154,6 +123,7 @@ import java.util.List;
     }
 
     // ---------- RF-FIC-02 y RF-FIC-03 ----------
+
     private void importarJson() {
         String ruta = LectorConsola.leerTexto("Ruta del fichero JSON: ");
         try {
@@ -175,6 +145,7 @@ import java.util.List;
     }
 
     // ---------- RF-FIC-04 ----------
+
     private void listarProductos() {
         if (inventario.estaVacio()) {
             aviso("El inventario está vacío. Importa un catálogo primero.");
@@ -225,6 +196,7 @@ import java.util.List;
     }
 
     // ---------- RF-FIC-05 ----------
+
     private void exportar(boolean enJson) {
         if (inventario.estaVacio()) {
             aviso("El inventario está vacío: no hay nada que exportar.");
@@ -253,6 +225,7 @@ import java.util.List;
     }
 
     // ---------- RF-FIC-06 ----------
+
     private void guardarInventario() {
         if (inventario.estaVacio()) {
             aviso("El inventario está vacío: no se crea ningún fichero.");
@@ -298,6 +271,7 @@ import java.util.List;
     }
 
     // ---------- Mensajes ----------
+
     private void error(String mensaje) {
         System.out.println(ColoresConsola.pintar(mensaje, ColoresConsola.ROJO));
     }

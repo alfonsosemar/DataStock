@@ -6,14 +6,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Comprobaciones de rutas que se repiten en varias funcionalidades.
- * Si algo falla lanza una OperacionFicheroException con un mensaje claro.
+ * Comprobaciones de rutas que se repiten en varias funcionalidades. Si algo
+ * falla lanza una OperacionFicheroException con un mensaje claro.
  */
 public final class Rutas {
 
-    private Rutas() { }
+    private Rutas() {
+    }
 
-    /** Ruta de un fichero que se va a LEER: debe existir, ser fichero y poder leerse. */
+    /**
+     * Ruta de un fichero que se va a LEER: debe existir, ser fichero y poder
+     * leerse.
+     */
     public static Path ficheroLegible(String ruta) throws OperacionFicheroException {
         Path path = convertir(ruta);
         if (!Files.exists(path)) {
@@ -28,7 +32,10 @@ public final class Rutas {
         return path;
     }
 
-    /** Ruta de un fichero que se va a ESCRIBIR: su directorio debe existir y no puede ser un directorio. */
+    /**
+     * Ruta de un fichero que se va a ESCRIBIR: su directorio debe existir y no
+     * puede ser un directorio.
+     */
     public static Path destinoEscritura(String ruta) throws OperacionFicheroException {
         Path path = convertir(ruta);
         if (Files.isDirectory(path)) {

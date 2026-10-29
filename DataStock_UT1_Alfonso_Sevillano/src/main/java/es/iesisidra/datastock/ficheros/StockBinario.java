@@ -2,6 +2,8 @@ package es.iesisidra.datastock.ficheros;
 
 import es.iesisidra.datastock.modelo.Producto;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,6 +20,29 @@ public final class StockBinario {
     public static final int OFFSET_STOCK = 32; // 24 bytes de código + 8 de precio
 
     private StockBinario() { }
+
+    /** Un registro leído de stock.bin: código, precio y stock. */
+    public static class RegistroStock {
+        private final String codigo;
+        private final double precio;
+        private final int stock;
+
+        public RegistroStock(String codigo, double precio, int stock) {
+            this.codigo = codigo;
+            this.precio = precio;
+            this.stock = stock;
+        }
+
+        public String getCodigo() { return codigo; }
+        public double getPrecio() { return precio; }
+        public int getStock() { return stock; }
+
+        @Override
+        public String toString() {
+            return codigo + " | " + BigDecimal.valueOf(precio).setScale(2, RoundingMode.HALF_UP).toPlainString()
+                    + " € | stock " + stock;
+        }
+    }
 
     /** Crea (o sobrescribe) el fichero con una copia de los productos recibidos. */
     public static void generar(List<Producto> productos, Path destino) throws OperacionFicheroException {
