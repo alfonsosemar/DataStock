@@ -1,11 +1,13 @@
 package es.iesisidra.datastock.servicio;
 
-import es.iesisidra.datastock.modelo.Producto;
 import java.util.List;
+
+import es.iesisidra.datastock.modelo.Producto;
 
 /**
  * Procesa UN registro leído de un catálogo: lo valida, comprueba duplicados y,
- * si es correcto, lo añade al inventario. Lo comparten el importador JSON y el XML.
+ * si es correcto, lo añade al inventario. Lo comparten el importador JSON y el
+ * XML.
  */
 public class ProcesadorProductos {
 
@@ -16,11 +18,12 @@ public class ProcesadorProductos {
     }
 
     /**
-     * @param numero posición del registro en el fichero (empieza en 1), para las incidencias
-     * Los campos llegan como texto (null si faltan en el fichero).
+     * @param numero posición del registro en el fichero (empieza en 1), para
+     * las incidencias Los campos llegan como texto (null si faltan en el
+     * fichero).
      */
     public void procesar(int numero, String codigo, String nombre, String precio, String stock,
-                         String categoriaId, String proveedorId, ResultadoImportacion resultado) {
+            String categoriaId, String proveedorId, ResultadoImportacion resultado) {
 
         List<String> errores = ValidadorProducto.validar(codigo, nombre, precio, stock, categoriaId, proveedorId);
 
