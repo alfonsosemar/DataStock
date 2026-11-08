@@ -19,16 +19,23 @@ import es.iesisidra.datastock.util.ColoresConsola;
 import es.iesisidra.datastock.util.LectorConsola;
 
 /**
- * Menús de DataStock. Solo pide datos y llama a otras clases:
- * la lógica de ficheros está en el paquete "ficheros" y las reglas en "servicio".
+ * Menús de DataStock. Solo pide datos y llama a otras clases: la lógica de
+ * ficheros está en el paquete "ficheros" y las reglas en "servicio".
  */
 public class MenuPrincipal {
+
     private final Inventario inventario;
 
-    /** @param inventario colección común de productos de esta ejecución. */
-    public MenuPrincipal(Inventario inventario) { this.inventario = inventario; }
+    /**
+     * @param inventario colección común de productos de esta ejecución.
+     */
+    public MenuPrincipal(Inventario inventario) {
+        this.inventario = inventario;
+    }
 
-    /** Ejecuta el menú principal hasta que el usuario selecciona salir. */
+    /**
+     * Ejecuta el menú principal hasta que el usuario selecciona salir.
+     */
     public void iniciar() {
         int opcion;
         do {
@@ -42,14 +49,29 @@ public class MenuPrincipal {
             System.out.println("0. Salir");
             opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 6);
             switch (opcion) {
-                case 1 : explorarRuta();
-                case 2 : importarJson();
-                case 3 : importarXml();
-                case 4 : menuConsultas();
-                case 5 : menuExportaciones();
-                case 6 : menuSerializacion();
-                case 0 : System.out.println(ColoresConsola.pintar("Hasta pronto.", ColoresConsola.VERDE));
-                default : throw new IllegalStateException("Opción inesperada");
+                case 1:
+                    explorarRuta();
+                    break;
+                case 2:
+                    importar(true);
+                    break;
+                case 3:
+                    importar(false);
+                    break;
+                case 4:
+                    menuConsultas();
+                    break;
+                case 5:
+                    menuExportaciones();
+                    break;
+                case 6:
+                    menuSerializacion();
+                    break;
+                case 0:
+                    System.out.println(ColoresConsola.pintar("Hasta pronto.", ColoresConsola.VERDE));
+                    break;
+                default:
+                    throw new IllegalStateException("Opción inesperada");
             }
         } while (opcion != 0);
     }
@@ -72,11 +94,19 @@ public class MenuPrincipal {
             System.out.println("0. Volver al menú principal");
             opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 3);
             switch (opcion) {
-                case 1 : listarProductos();
-                case 2 : buscarPorCodigo();
-                case 3 : buscarPorNombre();
-                case 0 : { }
-                default : throw new IllegalStateException("Opción inesperada");
+                case 1:
+                    listarProductos();
+                    break;
+                case 2:
+                    buscarPorCodigo();
+                    break;
+                case 3:
+                    buscarPorNombre();
+                    break;
+                case 0:
+                    break;
+                default:
+                    throw new IllegalStateException("Opción inesperada");
             }
         } while (opcion != 0);
     }
@@ -90,10 +120,16 @@ public class MenuPrincipal {
             System.out.println("0. Volver al menú principal");
             opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 2);
             switch (opcion) {
-                case 1 : exportar(true);
-                case 2 : exportar(false);
-                case 0 : { }
-                default : throw new IllegalStateException("Opción inesperada");
+                case 1:
+                    exportar(true);
+                    break;
+                case 2:
+                    exportar(false);
+                    break;
+                case 0:
+                    break;
+                default:
+                    throw new IllegalStateException("Opción inesperada");
             }
         } while (opcion != 0);
     }
@@ -107,45 +143,44 @@ public class MenuPrincipal {
             System.out.println("0. Volver al menú principal");
             opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 2);
             switch (opcion) {
-                case 1 : guardarInventario();
-                case 2 :recuperarInventario();
-                case 0 : { }
-                default : throw new IllegalStateException("Opción inesperada");
+                case 1:
+                    guardarInventario();
+                    break;
+                case 2:
+                    recuperarInventario();
+                    break;
+                case 0:
+                    break;
+                default:
+                    throw new IllegalStateException("Opción inesperada");
             }
         } while (opcion != 0);
     }
 
     // ---------- RF-FIC-01 ----------
-
     private void explorarRuta() {
         String ruta = LectorConsola.leerTexto("Ruta: ");
         ExploradorRutas.explorar(ruta);
     }
 
     // ---------- RF-FIC-02 y RF-FIC-03 ----------
-
-    private void importarJson() {
-        String ruta = LectorConsola.leerTexto("Ruta del fichero JSON: ");
+    private void importar(boolean enJson) {
+        String formato = enJson ? "JSON" : "XML";
+        String ruta = LectorConsola.leerTexto("Ruta del fichero " + formato + ": ");
         try {
-            ResultadoImportacion resultado = new ImportadorJson(inventario).importar(ruta);
-            resultado.mostrar("IMPORTAR JSON", ruta.trim());
-        } catch (OperacionFicheroException e) {
-            error(e.getMessage() + " No se ha importado ningún producto.");
-        }
-    }
-
-    private void importarXml() {
-        String ruta = LectorConsola.leerTexto("Ruta del fichero XML: ");
-        try {
-            ResultadoImportacion resultado = new ImportadorXml(inventario).importar(ruta);
-            resultado.mostrar("IMPORTAR XML", ruta.trim());
+            ResultadoImportacion resultado;
+            if (enJson) {
+                resultado = new ImportadorJson(inventario).importar(ruta);
+            } else {
+                resultado = new ImportadorXml(inventario).importar(ruta);
+            }
+            resultado.mostrar("IMPORTAR " + formato, ruta.trim());
         } catch (OperacionFicheroException e) {
             error(e.getMessage() + " No se ha importado ningún producto.");
         }
     }
 
     // ---------- RF-FIC-04 ----------
-
     private void listarProductos() {
         if (inventario.estaVacio()) {
             aviso("El inventario está vacío. Importa un catálogo primero.");
@@ -196,7 +231,6 @@ public class MenuPrincipal {
     }
 
     // ---------- RF-FIC-05 ----------
-
     private void exportar(boolean enJson) {
         if (inventario.estaVacio()) {
             aviso("El inventario está vacío: no hay nada que exportar.");
@@ -205,8 +239,7 @@ public class MenuPrincipal {
         String ruta = LectorConsola.leerTexto("Ruta de destino: ");
         try {
             Path destino = Rutas.destinoEscritura(ruta);
-            if (Files.exists(destino) && !LectorConsola.confirmar("El fichero ya existe. ¿Sobrescribir?")) {
-                aviso("Exportación cancelada. El fichero original no se ha modificado.");
+            if (!permiteEscribir(destino, "Exportación")) {
                 return;
             }
             List<Producto> ordenados = inventario.listarOrdenado();
@@ -225,7 +258,6 @@ public class MenuPrincipal {
     }
 
     // ---------- RF-FIC-06 ----------
-
     private void guardarInventario() {
         if (inventario.estaVacio()) {
             aviso("El inventario está vacío: no se crea ningún fichero.");
@@ -234,8 +266,7 @@ public class MenuPrincipal {
         String ruta = LectorConsola.leerTexto("Ruta de destino (.dat): ");
         try {
             Path destino = Rutas.destinoEscritura(ruta);
-            if (Files.exists(destino) && !LectorConsola.confirmar("El fichero ya existe. ¿Sobrescribir?")) {
-                aviso("Operación cancelada. El fichero original no se ha modificado.");
+            if (!permiteEscribir(destino, "Operación")) {
                 return;
             }
             PersistenciaInventario.guardar(inventario.getProductos(), destino);
@@ -270,8 +301,16 @@ public class MenuPrincipal {
         }
     }
 
-    // ---------- Mensajes ----------
+    // Si el fichero ya existe pide confirmación. Lo usan la exportación y el guardado.
+    private boolean permiteEscribir(Path destino, String operacion) {
+        if (Files.exists(destino) && !LectorConsola.confirmar("El fichero ya existe. ¿Sobrescribir?")) {
+            aviso(operacion + " cancelada. El fichero original no se ha modificado.");
+            return false;
+        }
+        return true;
+    }
 
+    // ---------- Mensajes ----------
     private void error(String mensaje) {
         System.out.println(ColoresConsola.pintar(mensaje, ColoresConsola.ROJO));
     }

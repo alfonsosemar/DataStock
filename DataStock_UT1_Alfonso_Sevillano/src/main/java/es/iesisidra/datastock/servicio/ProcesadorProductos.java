@@ -43,19 +43,7 @@ public class ProcesadorProductos {
             if (hayCodigo) {
                 identificador = codigo.trim();
             }
-            resultado.registrarRechazo(identificador, unir(errores));
+            resultado.registrarRechazo(identificador, String.join("; ", errores));
         }
-    }
-
-    // Junta los errores en una sola línea separados por "; "
-    private String unir(List<String> errores) {
-        String texto = "";
-        for (int i = 0; i < errores.size(); i++) {
-            if (i > 0) {
-                texto = texto + "; ";
-            }
-            texto = texto + errores.get(i);
-        }
-        return texto;
     }
 }

@@ -42,14 +42,19 @@ public final class AccesoAleatorioActividad {
                 switch (opcion) {
                     case 1:
                         generar();
+                        break;
                     case 2:
                         consultar();
+                        break;
                     case 3:
                         modificar();
+                        break;
                     case 4:
                         mostrarTodos();
+                        break;
                     case 0:
                         System.out.println("Fin de la actividad.");
+                        break;
                     default:
                         throw new IllegalStateException("Opción inesperada");
                 }
@@ -82,15 +87,13 @@ public final class AccesoAleatorioActividad {
     }
 
     private static void consultar() throws OperacionFicheroException {
-        long total = StockBinario.contarRegistros(exigirFichero());
-        long posicion = pedirPosicion(total);
+        long posicion = pedirPosicion();
         StockBinario.RegistroStock registro = StockBinario.leerRegistro(FICHERO, posicion);
         System.out.println(registro);
     }
 
     private static void modificar() throws OperacionFicheroException {
-        long total = StockBinario.contarRegistros(exigirFichero());
-        long posicion = pedirPosicion(total);
+        long posicion = pedirPosicion();
         int nuevoStock = LectorConsola.leerEntero("Nuevo stock: ");
         int anterior = StockBinario.modificarStock(FICHERO, posicion, nuevoStock);
         System.out.println("Actualización correcta: stock " + anterior + " → " + nuevoStock);
@@ -112,7 +115,8 @@ public final class AccesoAleatorioActividad {
     }
 
     // Se pide la posición tal cual; si está fuera de rango, StockBinario la rechaza con un mensaje.
-    private static long pedirPosicion(long total) {
+    private static long pedirPosicion() throws OperacionFicheroException {
+        long total = StockBinario.contarRegistros(exigirFichero());
         return LectorConsola.leerEntero("Posición (0-" + (total - 1) + "): ");
     }
 

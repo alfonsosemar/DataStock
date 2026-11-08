@@ -32,12 +32,9 @@ public final class XPathActividad {
         String ruta = LectorConsola.leerTexto("Fichero: ");
 
         try {
-            // 1. Abrir el XML (DOM seguro) y comprobar la raíz
+            // 1. Abrir el XML con DOM (también comprueba que la raíz sea <catalogo>)
             Path path = Rutas.ficheroLegible(ruta);
-            Document documento = XmlSeguro.leer(path);
-            if (!"catalogo".equals(documento.getDocumentElement().getTagName())) {
-                throw new OperacionFicheroException("La raíz del XML debe ser <catalogo>.");
-            }
+            Document documento = XmlSeguro.leerCatalogo(path);
 
             // 2. Con el documento ya abierto se pueden hacer varias consultas
             XPath xpath = XPathFactory.newInstance().newXPath();
@@ -47,12 +44,23 @@ public final class XPathActividad {
                 opcion = LectorConsola.leerOpcion("Opción: ", 0, 4);
                 try {
                     switch (opcion) {
-                        case 1 : consultarPorCodigo(xpath, documento);
-                        case 2 : consultarPorCategoria(xpath, documento);
-                        case 3 : consultarPrecioSuperior(xpath, documento);
-                        case 4 : contarProductos(xpath, documento);
-                        case 0 : System.out.println("Fin de las consultas.");
-                        default : throw new IllegalStateException("Opción inesperada");
+                        case 1:
+                            consultarPorCodigo(xpath, documento);
+                            break;
+                        case 2:
+                            consultarPorCategoria(xpath, documento);
+                            break;
+                        case 3:
+                            consultarPrecioSuperior(xpath, documento);
+                            break;
+                        case 4:
+                            contarProductos(xpath, documento);
+                            break;
+                        case 0:
+                            System.out.println("Fin de las consultas.");
+                            break;
+                        default:
+                            throw new IllegalStateException("Opción inesperada");
                     }
                 } catch (XPathExpressionException e) {
                     System.out.println(ColoresConsola.pintar("Error en la consulta XPath: " + e.getMessage(),

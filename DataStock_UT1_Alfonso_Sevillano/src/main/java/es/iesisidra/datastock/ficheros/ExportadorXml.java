@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
@@ -59,14 +58,9 @@ public final class ExportadorXml {
     }
 
     private static void guardar(Document documento, Path destino) throws IOException, TransformerException {
-        TransformerFactory fabrica = TransformerFactory.newInstance();
-        fabrica.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-        fabrica.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
-
-        Transformer transformador = fabrica.newTransformer();
-        transformador.setOutputProperty(OutputKeys.INDENT, "yes");
+        Transformer transformador = TransformerFactory.newInstance().newTransformer();
+        transformador.setOutputProperty(OutputKeys.INDENT, "yes"); // pretty printing
         transformador.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        transformador.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 
         try (OutputStream salida = Files.newOutputStream(destino)) {
             transformador.transform(new DOMSource(documento), new StreamResult(salida));

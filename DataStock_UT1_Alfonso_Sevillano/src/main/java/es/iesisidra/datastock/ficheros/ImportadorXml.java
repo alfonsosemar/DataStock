@@ -23,16 +23,11 @@ public class ImportadorXml {
     public ResultadoImportacion importar(String ruta) throws OperacionFicheroException {
         Path path = Rutas.ficheroLegible(ruta);
 
-        // 1. Leer con DOM seguro (rechaza DTD y XML mal formado)
-        Document documento = XmlSeguro.leer(path);
-
-        // 2. La raíz debe ser <catalogo>
+        // 1. Leer con DOM (rechaza XML mal formado, con DTD o con una raíz distinta de <catalogo>)
+        Document documento = XmlSeguro.leerCatalogo(path);
         Element raiz = documento.getDocumentElement();
-        if (!"catalogo".equals(raiz.getTagName())) {
-            throw new OperacionFicheroException("La raíz del XML debe ser <catalogo> y es <" + raiz.getTagName() + ">.");
-        }
 
-        // 3. Recoger los elementos <producto> hijos de la raíz
+        // 2. Recoger los elementos <producto> hijos de la raíz
         List<Element> registros = new ArrayList<>();
         NodeList hijos = raiz.getChildNodes();
         for (int i = 0; i < hijos.getLength(); i++) {
@@ -45,7 +40,7 @@ public class ImportadorXml {
         ResultadoImportacion resultado = new ResultadoImportacion();
         resultado.setEncontrados(registros.size());
 
-        // 4. Procesar cada producto con las mismas reglas que el JSON
+        // 3. Procesar cada producto con las mismas reglas que el JSON
         for (int i = 0; i < registros.size(); i++) {
             Element registro = registros.get(i);
             procesador.procesar(i + 1,

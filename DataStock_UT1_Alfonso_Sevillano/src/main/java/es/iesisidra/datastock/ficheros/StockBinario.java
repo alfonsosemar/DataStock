@@ -49,7 +49,10 @@ public final class StockBinario {
         try (RandomAccessFile fichero = new RandomAccessFile(destino.toFile(), "rw")) {
             fichero.setLength(0); // vaciar el contenido anterior
             for (Producto p : productos) {
-                fichero.writeChars(ajustarCodigo(p.getCodigo())); // 24 bytes
+                String codigo = ajustarCodigo(p.getCodigo());
+                for (int i = 0; i < TAM_CODIGO; i++) {
+                    fichero.writeChar(codigo.charAt(i));          // 12 chars x 2 bytes = 24 bytes
+                }
                 fichero.writeDouble(p.getPrecio().doubleValue()); // 8 bytes
                 fichero.writeInt(p.getStock());                   // 4 bytes
             }
