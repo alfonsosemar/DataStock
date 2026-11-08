@@ -43,10 +43,10 @@ public final class LectorConsola {
         }
     }
 
-    /** Solicita confirmación con S/N y devuelve true únicamente si se elige S. */
+    /** Solicita confirmación con S/N (en amarillo) y devuelve true únicamente si se elige S. */
     public static boolean confirmar(String mensaje) {
         while (true) {
-            String respuesta = leerTexto(mensaje + " (S/N): ").trim();
+            String respuesta = leerTexto(ColoresConsola.pintar(mensaje + " (S/N): ", ColoresConsola.AMARILLO)).trim();
             if (respuesta.equalsIgnoreCase("S")) return true;
             if (respuesta.equalsIgnoreCase("N")) return false;
             System.out.println("Responde S o N.");

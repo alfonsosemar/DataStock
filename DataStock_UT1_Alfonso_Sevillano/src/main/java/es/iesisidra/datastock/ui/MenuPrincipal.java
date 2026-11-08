@@ -17,6 +17,7 @@ import es.iesisidra.datastock.servicio.Inventario;
 import es.iesisidra.datastock.servicio.ResultadoImportacion;
 import es.iesisidra.datastock.util.ColoresConsola;
 import es.iesisidra.datastock.util.LectorConsola;
+import es.iesisidra.datastock.util.Mensajes;
 
 /**
  * Menús de DataStock. Solo pide datos y llama a otras clases: la lógica de
@@ -43,11 +44,12 @@ public class MenuPrincipal {
             System.out.println("1. Explorar ficheros y directorios");
             System.out.println("2. Importar productos desde JSON");
             System.out.println("3. Importar productos desde XML");
-            System.out.println("4. Consultar productos");
+            System.out.println("4. Consultar productos en memoria");
             System.out.println("5. Exportar productos");
             System.out.println("6. Guardar y recuperar inventario");
+            System.out.println("7. Gestionar base de datos MySQL");
             System.out.println("0. Salir");
-            opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 6);
+            opcion = LectorConsola.leerOpcion("Selecciona una opción: ", 0, 7);
             switch (opcion) {
                 case 1:
                     explorarRuta();
@@ -67,6 +69,9 @@ public class MenuPrincipal {
                 case 6:
                     menuSerializacion();
                     break;
+                case 7:
+                    new MenuMySQL(inventario).iniciar();
+                    break;
                 case 0:
                     System.out.println(ColoresConsola.pintar("Hasta pronto.", ColoresConsola.VERDE));
                     break;
@@ -79,7 +84,7 @@ public class MenuPrincipal {
     private void mostrarCabecera() {
         System.out.println(ColoresConsola.pintar("\n================================================", ColoresConsola.CIAN));
         System.out.println(ColoresConsola.pintar("         DATASTOCK - GESTIÓN DE INVENTARIO", ColoresConsola.NEGRITA));
-        System.out.println(ColoresConsola.pintar("                 FASE 1 - UT1", ColoresConsola.CIAN));
+        System.out.println(ColoresConsola.pintar("              FASE 2 - UT1 + UT2", ColoresConsola.CIAN));
         System.out.println(ColoresConsola.pintar("================================================", ColoresConsola.CIAN));
         System.out.println(ColoresConsola.pintar("Productos en memoria: " + inventario.cantidad(), ColoresConsola.GRIS));
     }
@@ -312,10 +317,10 @@ public class MenuPrincipal {
 
     // ---------- Mensajes ----------
     private void error(String mensaje) {
-        System.out.println(ColoresConsola.pintar(mensaje, ColoresConsola.ROJO));
+        Mensajes.error(mensaje);
     }
 
     private void aviso(String mensaje) {
-        System.out.println(ColoresConsola.pintar(mensaje, ColoresConsola.AMARILLO));
+        Mensajes.aviso(mensaje);
     }
 }

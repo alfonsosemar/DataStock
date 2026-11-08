@@ -1,0 +1,7 @@
+# Plantilla de configuración JDBC de DataStock (UT2).
+# 1. Copia este fichero como config/datastock.properties
+# 2. Escribe tu usuario y tu contraseña de MySQL.
+# config/datastock.properties está en .gitignore: tu contraseña no se sube a GitHub.
+jdbc.url=jdbc:mysql://localhost:3306/datastock?connectTimeout=5000
+jdbc.usuario=root
+jdbc.contrasena=ESCRIBE_AQUI_TU_CONTRASENA
