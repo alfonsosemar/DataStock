@@ -10,3 +10,6 @@ datos/salidas/*
 
 # Credenciales locales de MySQL (UT2): no se suben a GitHub
 config/datastock.properties
+
+# Base de datos de la demo SQLite (se genera al ejecutar DemoSQLite)
+datos/sqlite/
