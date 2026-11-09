@@ -21,6 +21,7 @@ Todo lo de la UT1 se conserva: el menú principal tiene una opción nueva (7) pa
   - Gson 2.11.0 (JSON, UT1).
   - **MySQL Connector/J 9.1.0** (`com.mysql:mysql-connector-j`).
   - **SQLite JDBC 3.46.1.0** (`org.xerial:sqlite-jdbc`), solo para `DemoSQLite`.
+  - `slf4j-nop` 1.7.36: solo sirve para que el driver de SQLite no escriba un aviso de logs al arrancar.
 
 ## 3. Preparar la base de datos MySQL
 
@@ -190,7 +191,7 @@ SQL-002 | Producto demo B
 
 En la segunda ejecución sale `Insertados: 0 | Ya existentes: 2`.
 
-> Al ejecutarla puede aparecer un aviso `SLF4J: Failed to load class...`. Lo escribe la librería de SQLite porque no hay sistema de logs configurado; no es un error.
+> Con JDK 24 o superior puede aparecer al principio un `WARNING: A restricted method in java.lang.System has been called`. Lo provoca el driver de SQLite al cargar su librería nativa; no es un error y con JDK 21 no aparece.
 
 ## 11. Comparativa MySQL y SQLite
 
