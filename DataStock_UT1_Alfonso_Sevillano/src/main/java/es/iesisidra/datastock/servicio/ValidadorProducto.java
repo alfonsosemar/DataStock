@@ -60,7 +60,10 @@ public final class ValidadorProducto {
 
     /** Quita espacios y pasa a mayúsculas (tec-001 → TEC-001). Devuelve "" si es null. */
     public static String normalizarCodigo(String codigo) {
-        return codigo == null ? "" : codigo.trim().toUpperCase();
+        if (codigo == null) {
+            return "";
+        }
+        return codigo.trim().toUpperCase();
     }
 
     /** Código: 1 a 12 caracteres A-Z, 0-9 o guion. */

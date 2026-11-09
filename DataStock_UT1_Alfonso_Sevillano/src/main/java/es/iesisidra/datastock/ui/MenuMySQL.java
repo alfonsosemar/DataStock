@@ -1,11 +1,18 @@
 package es.iesisidra.datastock.ui;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
+import es.iesisidra.datastock.bd.DemoTransaccionBD;
 import es.iesisidra.datastock.bd.ErroresBD;
 import es.iesisidra.datastock.bd.EsquemaBD;
+import es.iesisidra.datastock.bd.ImportacionBD;
 import es.iesisidra.datastock.bd.InfoConexion;
+import es.iesisidra.datastock.bd.ProductoBD;
+import es.iesisidra.datastock.modelo.Producto;
 import es.iesisidra.datastock.servicio.Inventario;
+import es.iesisidra.datastock.servicio.ValidadorProducto;
 import es.iesisidra.datastock.util.ColoresConsola;
 import es.iesisidra.datastock.util.LectorConsola;
 import es.iesisidra.datastock.util.Mensajes;
@@ -66,8 +73,10 @@ public class MenuMySQL {
                     new MenuMovimientos().iniciarHistorial();
                     break;
                 case 8:
+                    importarDesdeMemoria();
+                    break;
                 case 9:
-                    Mensajes.aviso("Opción pendiente de implementar.");
+                    demostrarTransaccion();
                     break;
                 case 0:
                     break;
@@ -94,6 +103,132 @@ public class MenuMySQL {
             }
         } catch (SQLException e) {
             Mensajes.error("No se ha podido conectar. " + ErroresBD.explicar(e));
+        }
+    }
+
+    // ---------- RF-JDBC-07 ----------
+    private void importarDesdeMemoria() {
+        Mensajes.titulo("IMPORTAR PRODUCTOS DE MEMORIA A MYSQL");
+        if (inventario.estaVacio()) {
+            Mensajes.aviso("No hay productos en memoria para importar. Importa antes un JSON o XML (opciones 2 y 3).");
+            return;
+        }
+        System.out.println("Productos disponibles en memoria: " + inventario.cantidad());
+        if (!LectorConsola.confirmar("[AVISO] ¿Deseas importar estos productos a MySQL?")) {
+            Mensajes.aviso("Importación cancelada. No se ha modificado MySQL.");
+            return;
+        }
+        try {
+            List<Producto> aceptados = new ArrayList<>();
+            int omitidos = 0;
+            int rechazados = 0;
+            System.out.println("Iniciando comprobación de productos...");
+            for (Producto p : inventario.listarOrdenado()) {
+                System.out.println("\nComprobando " + p.getCodigo() + " - " + p.getNombre() + "...");
+                List<String> errores = ValidadorProducto.validar(p);
+                if (!errores.isEmpty()) {
+                    Mensajes.error("Datos incorrectos: " + String.join("; ", errores) + ". El producto no se puede importar.");
+                    rechazados++;
+                    continue;
+                }
+                if (ProductoBD.existe(p.getCodigo())) {
+                    Mensajes.aviso("El producto ya existe en MySQL. Se omite.");
+                    omitidos++;
+                    continue;
+                }
+                String motivo = ImportacionBD.motivoReferencias(p);
+                if (motivo != null) {
+                    Mensajes.error(motivo + " El producto no se puede importar.");
+                    rechazados++;
+                    continue;
+                }
+                Mensajes.ok("Producto válido para importar.");
+                aceptados.add(p);
+            }
+
+            int insertados = 0;
+            boolean huboRollback = false;
+            if (!aceptados.isEmpty()) {
+                System.out.println();
+                if (!LectorConsola.confirmar("[AVISO] Se van a insertar " + aceptados.size()
+                        + " productos en una única transacción. ¿Continuar?")) {
+                    Mensajes.aviso("Importación cancelada. No se ha insertado ningún producto.");
+                    return;
+                }
+                try {
+                    insertados = ImportacionBD.insertarLote(aceptados);
+                } catch (SQLException e) {
+                    huboRollback = true;
+                    Mensajes.error("Error SQL durante el lote: " + ErroresBD.explicar(e));
+                    Mensajes.error("Se ha hecho ROLLBACK: no se ha confirmado ninguna inserción del lote ("
+                            + aceptados.size() + " productos).");
+                }
+            }
+
+            System.out.println("\n------------------------------------------------");
+            System.out.println("RESULTADO DE LA IMPORTACIÓN");
+            System.out.println("------------------------------------------------");
+            System.out.println("Productos analizados:              " + inventario.cantidad());
+            System.out.println("Productos insertados:              " + insertados);
+            System.out.println("Omitidos por código duplicado:     " + omitidos);
+            System.out.println("Rechazados por datos incorrectos:  " + rechazados);
+            if (huboRollback) {
+                Mensajes.error("Importación revertida.");
+            } else {
+                Mensajes.ok("Importación finalizada. El inventario en memoria no se ha modificado.");
+            }
+        } catch (SQLException e) {
+            Mensajes.error(ErroresBD.explicar(e) + " No se ha insertado ningún producto.");
+        }
+    }
+
+    // ---------- RF-JDBC-08 ----------
+    private void demostrarTransaccion() {
+        Mensajes.titulo("DEMOSTRACIÓN DE TRANSACCIONES JDBC");
+        int a1 = DemoTransaccionBD.ID_A1;
+        int a2 = DemoTransaccionBD.ID_A2;
+        int b = DemoTransaccionBD.ID_B;
+        System.out.println("Se usan categorías de prueba que no afectan a los datos reales:");
+        System.out.println(" Escenario A (commit):   insertar las categorías " + a1 + " y " + a2 + ".");
+        System.out.println(" Escenario B (rollback): insertar la categoría " + b + " dos veces (clave duplicada).");
+        if (!LectorConsola.confirmar("[AVISO] ¿Comenzar la demostración?")) {
+            Mensajes.aviso("Demostración cancelada.");
+            return;
+        }
+        try {
+            // Por si quedaron categorías de una demostración anterior.
+            DemoTransaccionBD.eliminarCategoriasDemo();
+
+            System.out.println("\n--- Escenario A: setAutoCommit(false), 2 INSERT y commit() ---");
+            DemoTransaccionBD.escenarioCommit();
+            if (DemoTransaccionBD.existe(a1) && DemoTransaccionBD.existe(a2)) {
+                Mensajes.ok("Commit realizado: el SELECT encuentra las categorías " + a1 + " y " + a2 + ".");
+            } else {
+                Mensajes.error("Tras el commit no aparecen las dos categorías.");
+            }
+
+            System.out.println("\n--- Escenario B: INSERT correcto, INSERT duplicado y rollback() ---");
+            SQLException error = DemoTransaccionBD.escenarioRollback();
+            if (error == null) {
+                Mensajes.error("No se produjo el error esperado.");
+            } else {
+                Mensajes.error("Error esperado capturado: " + ErroresBD.explicar(error));
+                if (DemoTransaccionBD.existe(b)) {
+                    Mensajes.error("La categoría " + b + " sigue en MySQL: el rollback no ha funcionado.");
+                } else {
+                    Mensajes.ok("Rollback correcto: la primera inserción (categoría " + b + ") tampoco está en MySQL.");
+                }
+            }
+            System.out.println("\nautoCommit restaurado a true y conexiones cerradas.");
+
+            if (LectorConsola.confirmar("[AVISO] ¿Eliminar ahora las categorías de demostración?")) {
+                int borradas = DemoTransaccionBD.eliminarCategoriasDemo();
+                Mensajes.ok("Categorías de demostración eliminadas: " + borradas + ".");
+            } else {
+                Mensajes.aviso("Se conservan. Se borrarán solas la próxima vez que repitas la demostración.");
+            }
+        } catch (SQLException e) {
+            Mensajes.error(ErroresBD.explicar(e));
         }
     }
 }

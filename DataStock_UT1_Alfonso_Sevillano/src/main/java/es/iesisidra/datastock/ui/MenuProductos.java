@@ -68,12 +68,28 @@ class MenuProductos {
             Mensajes.error("El producto " + codigo + " ya existe en MySQL. No se sobrescribe.");
             return;
         }
-        // Si el usuario cancela un campo (devuelve null), los siguientes ya no se piden.
+        // Si el usuario pulsa Intro en un campo, se devuelve null y se cancela el alta.
         String nombre = pedirCampo("Nombre", null);
-        String precio = nombre == null ? null : pedirCampo("Precio", null);
-        String stock = precio == null ? null : pedirCampo("Stock inicial", null);
-        Integer categoria = stock == null ? null : pedirReferencia(true, null);
-        Integer proveedor = categoria == null ? null : pedirReferencia(false, null);
+        if (nombre == null) {
+            Mensajes.aviso("Alta cancelada. No se ha insertado nada.");
+            return;
+        }
+        String precio = pedirCampo("Precio", null);
+        if (precio == null) {
+            Mensajes.aviso("Alta cancelada. No se ha insertado nada.");
+            return;
+        }
+        String stock = pedirCampo("Stock inicial", null);
+        if (stock == null) {
+            Mensajes.aviso("Alta cancelada. No se ha insertado nada.");
+            return;
+        }
+        Integer categoria = pedirReferencia(true, null);
+        if (categoria == null) {
+            Mensajes.aviso("Alta cancelada. No se ha insertado nada.");
+            return;
+        }
+        Integer proveedor = pedirReferencia(false, null);
         if (proveedor == null) {
             Mensajes.aviso("Alta cancelada. No se ha insertado nada.");
             return;
@@ -155,9 +171,13 @@ class MenuProductos {
      * si no, Intro conserva el valor actual.
      */
     private String pedirCampo(String campo, String actual) {
+        String mensaje;
+        if (actual == null) {
+            mensaje = campo + EntradaDatos.CANCELAR;
+        } else {
+            mensaje = campo + " [" + actual + "] (Intro conserva): ";
+        }
         while (true) {
-            String mensaje = actual == null ? campo + EntradaDatos.CANCELAR
-                                            : campo + " [" + actual + "] (Intro conserva): ";
             String texto = LectorConsola.leerTexto(mensaje).trim();
             if (texto.isEmpty()) {
                 return actual;
@@ -190,10 +210,19 @@ class MenuProductos {
      * Con {@code actual} null, Intro cancela; si no, Intro conserva el actual.
      */
     private Integer pedirReferencia(boolean esCategoria, Integer actual) throws SQLException {
-        String campo = esCategoria ? "ID de categoría" : "ID de proveedor";
+        String campo;
+        if (esCategoria) {
+            campo = "ID de categoría";
+        } else {
+            campo = "ID de proveedor";
+        }
+        String mensaje;
+        if (actual == null) {
+            mensaje = campo + EntradaDatos.CANCELAR;
+        } else {
+            mensaje = campo + " [" + actual + "] (Intro conserva): ";
+        }
         while (true) {
-            String mensaje = actual == null ? campo + EntradaDatos.CANCELAR
-                                            : campo + " [" + actual + "] (Intro conserva): ";
             String texto = LectorConsola.leerTexto(mensaje).trim();
             if (texto.isEmpty()) {
                 return actual;
@@ -204,12 +233,17 @@ class MenuProductos {
                 continue;
             }
             int id = Integer.parseInt(texto);
-            boolean existe = esCategoria ? CategoriaBD.buscar(id) != null : ProveedorBD.buscar(id) != null;
-            if (existe) {
-                return id;
+            if (esCategoria) {
+                if (CategoriaBD.buscar(id) != null) {
+                    return id;
+                }
+                Mensajes.error("No existe la categoría con ID " + id + ". Dala de alta antes o indica otra.");
+            } else {
+                if (ProveedorBD.buscar(id) != null) {
+                    return id;
+                }
+                Mensajes.error("No existe el proveedor con ID " + id + ". Dalo de alta antes o indica otro.");
             }
-            Mensajes.error("No existe " + (esCategoria ? "la categoría" : "el proveedor") + " con ID " + id
-                    + " en la base de datos. Dalo de alta antes o indica otro.");
         }
     }
 }

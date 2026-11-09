@@ -64,9 +64,18 @@ public final class CategoriaBD {
 
     /** @return filas insertadas (1 si todo va bien). */
     public static int insertar(Categoria c) throws SQLException {
+        try (Connection con = ConexionBD.conectar()) {
+            return insertar(con, c);
+        }
+    }
+
+    /**
+     * Inserta usando una conexión ya abierta. La usa la demostración de transacciones,
+     * que necesita varias inserciones dentro de la misma transacción.
+     */
+    static int insertar(Connection con, Categoria c) throws SQLException {
         String sql = "INSERT INTO categoria (id, nombre) VALUES (?, ?)";
-        try (Connection con = ConexionBD.conectar();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, c.getId());
             ps.setString(2, c.getNombre());
             return ps.executeUpdate();

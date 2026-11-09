@@ -34,7 +34,10 @@ public final class ProductoBD {
              PreparedStatement ps = con.prepareStatement(SELECT_FICHA + "WHERE p.codigo = ?")) {
             ps.setString(1, codigo);
             List<FichaProducto> fichas = leerFichas(ps);
-            return fichas.isEmpty() ? null : fichas.get(0);
+            if (fichas.isEmpty()) {
+                return null;
+            }
+            return fichas.get(0);
         }
     }
 

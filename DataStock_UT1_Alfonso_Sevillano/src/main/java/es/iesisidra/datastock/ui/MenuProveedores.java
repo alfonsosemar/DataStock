@@ -212,6 +212,9 @@ class MenuProveedores {
     }
 
     private String mostrarEmail(String email) {
-        return email == null ? SIN_EMAIL : email;
+        if (email == null) {
+            return SIN_EMAIL;
+        }
+        return email;
     }
 }
