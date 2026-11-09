@@ -7,14 +7,20 @@ import java.util.List;
 import es.iesisidra.datastock.modelo.Producto;
 
 /**
- * Reglas comunes de los productos (apartado 6 del enunciado).
- * JSON, XML y .dat usan estas mismas reglas, así que el resultado es equivalente.
+ * Reglas comunes de los productos.
+ * <p>JSON, XML, .dat (UT1) y los menús de MySQL (UT2) usan estas mismas reglas,
+ * que coinciden con las restricciones CHECK de la tabla {@code producto}.
+ * Cada método {@code errorXxx} devuelve el motivo del error o null si el dato
+ * es válido; así el menú puede volver a pedir solo el campo incorrecto.</p>
  */
 public final class ValidadorProducto {
 
     private static final int MAX_CODIGO = 12;
     private static final int MIN_NOMBRE = 3;
     private static final int MAX_NOMBRE = 100;
+    private static final int MAX_DECIMALES = 2;
+    // DECIMAL(10,2): como mucho 8 cifras enteras y 2 decimales.
+    private static final BigDecimal PRECIO_MAXIMO = new BigDecimal("99999999.99");
 
     private ValidadorProducto() { }
 
@@ -25,56 +31,12 @@ public final class ValidadorProducto {
     public static List<String> validar(String codigo, String nombre, String precio,
                                        String stock, String categoriaId, String proveedorId) {
         List<String> errores = new ArrayList<>();
-
-        // Código: obligatorio, máximo 12 caracteres y patrón [A-Z0-9-]+
-        if (codigo == null || codigo.trim().isEmpty()) {
-            errores.add("el código es obligatorio");
-        } else {
-            String c = codigo.trim();
-            if (c.length() > MAX_CODIGO) {
-                errores.add("el código no puede superar los 12 caracteres");
-            }
-            if (!c.matches("[A-Z0-9-]+")) {
-                errores.add("el código solo admite mayúsculas, números y guiones");
-            }
-        }
-
-        // Nombre: entre 3 y 100 caracteres
-        if (nombre == null || nombre.trim().length() < MIN_NOMBRE || nombre.trim().length() > MAX_NOMBRE) {
-            errores.add("el nombre debe tener entre 3 y 100 caracteres");
-        }
-
-        // Precio: número decimal mayor que 0
-        if (precio == null || precio.trim().isEmpty()) {
-            errores.add("el precio es obligatorio");
-        } else {
-            try {
-                BigDecimal valor = new BigDecimal(precio.trim());
-                if (valor.compareTo(BigDecimal.ZERO) <= 0) {
-                    errores.add("el precio debe ser mayor que 0");
-                }
-            } catch (NumberFormatException e) {
-                errores.add("el precio no es un número válido (" + precio.trim() + ")");
-            }
-        }
-
-        // Stock: entero mayor o igual que 0
-        if (stock == null || stock.trim().isEmpty()) {
-            errores.add("el stock es obligatorio");
-        } else {
-            try {
-                if (Integer.parseInt(stock.trim()) < 0) {
-                    errores.add("el stock no puede ser negativo");
-                }
-            } catch (NumberFormatException e) {
-                errores.add("el stock debe ser un número entero (" + stock.trim() + ")");
-            }
-        }
-
-        // Identificadores: enteros positivos
-        validarIdPositivo(categoriaId, "categoriaId", errores);
-        validarIdPositivo(proveedorId, "proveedorId", errores);
-
+        anadirSiHayError(errores, errorCodigo(codigo));
+        anadirSiHayError(errores, errorNombre(nombre));
+        anadirSiHayError(errores, errorPrecio(precio));
+        anadirSiHayError(errores, errorStock(stock));
+        anadirSiHayError(errores, errorId(categoriaId, "categoriaId"));
+        anadirSiHayError(errores, errorId(proveedorId, "proveedorId"));
         return errores;
     }
 
@@ -96,17 +58,90 @@ public final class ValidadorProducto {
                 Integer.parseInt(proveedorId.trim()));
     }
 
-    private static void validarIdPositivo(String valor, String campo, List<String> errores) {
+    /** Quita espacios y pasa a mayúsculas (tec-001 → TEC-001). Devuelve "" si es null. */
+    public static String normalizarCodigo(String codigo) {
+        return codigo == null ? "" : codigo.trim().toUpperCase();
+    }
+
+    /** Código: 1 a 12 caracteres A-Z, 0-9 o guion. */
+    public static String errorCodigo(String codigo) {
+        if (codigo == null || codigo.trim().isEmpty()) {
+            return "el código es obligatorio";
+        }
+        String c = codigo.trim();
+        if (c.length() > MAX_CODIGO) {
+            return "el código no puede superar los 12 caracteres";
+        }
+        if (!c.matches("[A-Z0-9-]+")) {
+            return "el código solo admite mayúsculas, números y guiones";
+        }
+        return null;
+    }
+
+    /** Nombre: entre 3 y 100 caracteres sin contar los espacios de los extremos. */
+    public static String errorNombre(String nombre) {
+        if (nombre == null || nombre.trim().length() < MIN_NOMBRE || nombre.trim().length() > MAX_NOMBRE) {
+            return "el nombre debe tener entre 3 y 100 caracteres";
+        }
+        return null;
+    }
+
+    /** Precio: número mayor que 0, con 2 decimales como máximo y dentro de DECIMAL(10,2). */
+    public static String errorPrecio(String precio) {
+        if (precio == null || precio.trim().isEmpty()) {
+            return "el precio es obligatorio";
+        }
+        BigDecimal valor;
+        try {
+            valor = new BigDecimal(precio.trim());
+        } catch (NumberFormatException e) {
+            return "el precio no es un número válido (" + precio.trim() + ")";
+        }
+        if (valor.compareTo(BigDecimal.ZERO) <= 0) {
+            return "el precio debe ser mayor que 0";
+        }
+        if (valor.stripTrailingZeros().scale() > MAX_DECIMALES) {
+            return "el precio admite como máximo dos decimales";
+        }
+        if (valor.compareTo(PRECIO_MAXIMO) > 0) {
+            return "el precio supera el máximo admitido (99999999.99)";
+        }
+        return null;
+    }
+
+    /** Stock: entero mayor o igual que 0. */
+    public static String errorStock(String stock) {
+        if (stock == null || stock.trim().isEmpty()) {
+            return "el stock es obligatorio";
+        }
+        try {
+            if (Integer.parseInt(stock.trim()) < 0) {
+                return "el stock no puede ser negativo";
+            }
+        } catch (NumberFormatException e) {
+            return "el stock debe ser un número entero (" + stock.trim() + ")";
+        }
+        return null;
+    }
+
+    /** Identificador de categoría o proveedor: entero positivo. */
+    public static String errorId(String valor, String campo) {
         if (valor == null || valor.trim().isEmpty()) {
-            errores.add(campo + " es obligatorio");
-            return;
+            return campo + " es obligatorio";
         }
         try {
             if (Integer.parseInt(valor.trim()) <= 0) {
-                errores.add(campo + " debe ser un entero positivo");
+                return campo + " debe ser un entero positivo";
             }
         } catch (NumberFormatException e) {
-            errores.add(campo + " debe ser un número entero (" + valor.trim() + ")");
+            return campo + " debe ser un número entero (" + valor.trim() + ")";
+        }
+        return null;
+    }
+
+    private static void anadirSiHayError(List<String> errores, String error) {
+        if (error != null) {
+            errores.add(error);
         }
     }
 }

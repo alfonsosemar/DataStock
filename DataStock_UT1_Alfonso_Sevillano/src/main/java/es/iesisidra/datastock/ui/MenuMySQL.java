@@ -54,9 +54,17 @@ public class MenuMySQL {
                     new MenuProveedores().iniciar();
                     break;
                 case 4:
+                    new MenuProductos().iniciar();
+                    break;
                 case 5:
+                    new MenuConsultasBD().iniciar();
+                    break;
                 case 6:
+                    new MenuMovimientos().iniciarMovimientos();
+                    break;
                 case 7:
+                    new MenuMovimientos().iniciarHistorial();
+                    break;
                 case 8:
                 case 9:
                     Mensajes.aviso("Opción pendiente de implementar.");
